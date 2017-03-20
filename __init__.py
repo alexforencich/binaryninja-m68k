@@ -331,11 +331,11 @@ class OpRegisterIndirectPair:
         return [
             InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("),
             InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg1),
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, ")"),
+            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")"),
             InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ":"),
             InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("),
             InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg2),
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, ")")
+            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")")
         ]
 
     def get_pre_il(self, il):
@@ -500,18 +500,20 @@ class OpRegisterIndirectIndex:
 
     def format(self, addr):
         # $1234(a0,a1.l*4)
-        return [
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset),
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.ireg),
-            InstructionTextToken(InstructionTextTokenType.TextToken, "."),
-            InstructionTextToken(InstructionTextTokenType.TextToken, "l" if self.ireg_long else 'w'),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, "*"),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "{}".format(self.scale), self.scale),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")")
-        ]
+        tokens = []
+        if self.offset != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.ireg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, "."))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, "l" if self.ireg_long else 'w'))
+        if self.scale != 1:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, "*"))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "{}".format(self.scale), self.scale))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")"))
+        return tokens
 
     def get_pre_il(self, il):
         return None
@@ -554,17 +556,19 @@ class OpMemoryIndirect:
 
     def format(self, addr):
         # ([$1234,a0],$1234)
-        return [
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("),
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "["),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, "]"),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.outer_displacement), self.outer_displacement),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")")
-        ]
+        tokens = []
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "["))
+        if self.offset != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, "]"))
+        if self.outer_displacement != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.outer_displacement), self.outer_displacement))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")"))
+        return tokens
 
     def get_pre_il(self, il):
         return None
@@ -609,23 +613,26 @@ class OpMemoryIndirectPostindex:
 
     def format(self, addr):
         # ([$1234,a0],a1.l*4,$1234)
-        return [
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("),
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "["),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, "]"),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.ireg),
-            InstructionTextToken(InstructionTextTokenType.TextToken, "."),
-            InstructionTextToken(InstructionTextTokenType.TextToken, "l" if self.ireg_long else 'w'),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, "*"),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "{}".format(self.scale), self.scale),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.outer_displacement), self.outer_displacement),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")")
-        ]
+        tokens = []
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "["))
+        if self.offset != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, "]"))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.ireg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, "."))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, "l" if self.ireg_long else 'w'))
+        if self.scale != 1:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, "*"))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "{}".format(self.scale), self.scale))
+        if self.outer_displacement != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.outer_displacement), self.outer_displacement))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")"))
+        return tokens
 
     def get_pre_il(self, il):
         return None
@@ -676,23 +683,26 @@ class OpMemoryIndirectPreindex:
 
     def format(self, addr):
         # ([$1234,a0,a1.l*4],$1234)
-        return [
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("),
-            InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "["),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.RegisterToken, self.ireg),
-            InstructionTextToken(InstructionTextTokenType.TextToken, "."),
-            InstructionTextToken(InstructionTextTokenType.TextToken, "l" if self.ireg_long else 'w'),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, "*"),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "{}".format(self.scale), self.scale),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, "]"),
-            InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","),
-            InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.outer_displacement), self.outer_displacement),
-            InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")")
-        ]
+        tokens = []
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "("))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, "["))
+        if self.offset != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.offset), self.offset))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.reg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.RegisterToken, self.ireg))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, "."))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, "l" if self.ireg_long else 'w'))
+        if self.scale != 1:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, "*"))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "{}".format(self.scale), self.scale))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, "]"))
+        if self.outer_displacement != 0:
+            tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ","))
+            tokens.append(InstructionTextToken(InstructionTextTokenType.IntegerToken, "${:x}".format(self.outer_displacement), self.outer_displacement))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.EndMemoryOperandToken, ")"))
+        return tokens
 
     def get_pre_il(self, il):
         return None
