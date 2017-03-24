@@ -352,7 +352,7 @@ class OpRegisterIndirectPair:
 
     def get_dest_il(self, il, values, flags=0):
         #return (il.store(1 << self.size, il.reg(4, self.reg1), values[0], flags), il.store(1 << self.size, il.reg(4, self.reg2), values[1], flags))
-        return (il.store(1 << self.size, il.reg(4, self.reg1), values[0], flags), il.store(1 << self.size, il.reg(4, self.reg2), values[1]))
+        return (il.store(1 << self.size, il.reg(4, self.reg1), values[0]), il.store(1 << self.size, il.reg(4, self.reg2), values[1]))
 
 
 class OpRegisterIndirectPostincrement:
