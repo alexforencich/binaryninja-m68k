@@ -1051,11 +1051,11 @@ class M68000(Architecture):
                 # rtm, callm, chk2, cmp2
                 if instruction & 0xfff0 == 0x06c0:
                     instr = 'rtm'
-                    dest = OpRegisterDirect(2, Registers[instruction & 15])
+                    dest = OpRegisterDirect(SIZE_LONG, Registers[instruction & 15])
                     length = 2
                 elif instruction & 0xffc0 == 0x06c0:
                     instr = 'callm'
-                    source = OpImmediate(0, struct.unpack_from('>B', data, 3)[0])
+                    source = OpImmediate(SIZE_BYTE, struct.unpack_from('>B', data, 3)[0])
                     dest, extra_dest = self.decode_effective_address(instruction >> 3, instruction, data[4:], SIZE_BYTE) # check
                     length = 4+extra_dest
                 else:
@@ -1296,7 +1296,7 @@ class M68000(Architecture):
                     skip_ea = True
                 elif instruction & 0xfff8 == 0x4848:
                     instr = 'bkpt'
-                    source = OpImmediate(0, instruction & 7)
+                    source = OpImmediate(SIZE_BYTE, instruction & 7)
                     skip_ea = True
                 elif instruction & 0xffc0 == 0x4840:
                     instr = 'pea'
@@ -1347,7 +1347,7 @@ class M68000(Architecture):
                 if instruction & 0xfff0 == 0x4e40:
                     instr = 'trap'
                     length = 2
-                    source = OpImmediate(0, instruction & 15)
+                    source = OpImmediate(SIZE_BYTE, instruction & 15)
                     skip_ea = True
                 elif instruction & 0xfff0 == 0x4e50:
                     if instruction & 0xfff8 == 0x4e50:
@@ -1355,12 +1355,12 @@ class M68000(Architecture):
                         dest, extra_dest = self.decode_effective_address(7, 4, data[2:], 1)
                     else:
                         instr = 'unlk'
-                    source = OpRegisterDirect(2, Registers[(instruction & 7) + 8])
+                    source = OpRegisterDirect(SIZE_LONG, Registers[(instruction & 7) + 8])
                     skip_ea = True
                 elif instruction & 0xfff0 == 0x4e60:
                     instr = 'move'
                     size = SIZE_LONG
-                    source = OpRegisterDirect(2, Registers[(instruction & 7) + 8])
+                    source = OpRegisterDirect(SIZE_LONG, Registers[(instruction & 7) + 8])
                     dest = OpRegisterDirect(size, 'usp')
                     if instruction & 0x08:
                         source, dest = dest, source
@@ -1439,10 +1439,10 @@ class M68000(Architecture):
                     instr = 'trap'+Condition[(instruction >> 8) & 0xf]
                     if instruction & 7 == 2:
                         length = 4
-                        source = OpImmediate(1, struct.unpack_from('>H', data, 2)[0])
+                        source = OpImmediate(SIZE_WORD, struct.unpack_from('>H', data, 2)[0])
                     elif instruction & 7 == 3:
                         length = 6
-                        source = OpImmediate(2, struct.unpack_from('>L', data, 2)[0])
+                        source = OpImmediate(SIZE_LONG, struct.unpack_from('>L', data, 2)[0])
                     elif instruction & 7 == 4:
                         length = 2
                 else:
@@ -1459,7 +1459,7 @@ class M68000(Architecture):
                 if val == 0:
                     val = 8
                 size = (instruction >> 6) & 3
-                source = OpImmediate(0, val)
+                source = OpImmediate(SIZE_BYTE, val)
                 dest, extra_dest = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
                 length = 2+extra_dest
         elif operation_code == 0x6:
@@ -1683,7 +1683,7 @@ class M68000(Architecture):
                     val = (instruction >> 9) & 7
                     if val == 0:
                         val = 8
-                    source = OpImmediate(0, val)
+                    source = OpImmediate(SIZE_BYTE, val)
                 dest = OpRegisterDirect(size, Registers[instruction & 7])
                 instr = ShiftStyle[style]
                 if direction:
