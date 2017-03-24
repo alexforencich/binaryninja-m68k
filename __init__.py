@@ -1514,14 +1514,21 @@ class M68000(Architecture):
             elif instruction & 0xf130 == 0x8100:
                 if instruction & 0x0040:
                     instr = 'pack'
+                    if instruction & 8:
+                        dest = OpRegisterIndirectPredecrement(SIZE_BYTE, Registers[((instruction >> 9) & 7) + 8])
+                        source = OpRegisterIndirectPredecrement(SIZE_WORD, Registers[(instruction & 7) + 8])
+                    else:
+                        dest = OpRegisterDirect(SIZE_BYTE, Registers[(instruction >> 9) & 7])
+                        source = OpRegisterDirect(SIZE_WORD, Registers[instruction & 7])
                 else:
                     instr = 'unpk'
+                    if instruction & 8:
+                        dest = OpRegisterIndirectPredecrement(SIZE_WORD, Registers[((instruction >> 9) & 7) + 8])
+                        source = OpRegisterIndirectPredecrement(SIZE_BYTE, Registers[(instruction & 7) + 8])
+                    else:
+                        dest = OpRegisterDirect(SIZE_WORD, Registers[(instruction >> 9) & 7])
+                        source = OpRegisterDirect(SIZE_BYTE, Registers[instruction & 7])
                 length = 4
-                dest = OpRegisterDirect(SIZE_BYTE, Registers[(instruction >> 9) & 7])
-                source = OpRegisterDirect(SIZE_BYTE, Registers[instruction & 7])
-                if instruction & 8:
-                    dest = OpRegisterIndirectPredecrement(SIZE_BYTE, Registers[((instruction >> 9) & 7) + 8])
-                    source = OpRegisterIndirectPredecrement(SIZE_BYTE, Registers[(instruction & 7) + 8])
                 third = OpImmediate(SIZE_WORD, struct.unpack_from(">H", data, 2)[0])
             else:
                 instr = 'or'
