@@ -1853,11 +1853,59 @@ class M68000(Architecture):
             # TODO
             il.append(il.unimplemented())
         elif instr == 'pack':
-            # TODO
-            il.append(il.unimplemented())
+            il.append(
+                il.set_reg(2,
+                    LLIL_TEMP(0),
+                    il.add(2,
+                        source.get_source_il(il),
+                        third.get_source_il(il)
+                    )
+                )
+            )
+            il.append(
+                dest.get_dest_il(il,
+                    il.or_expr(1,
+                        il.and_expr(2,
+                            il.reg(2, LLIL_TEMP(0)),
+                            il.const(2, 0x000F)
+                        ),
+                        il.logical_shift_right(2,
+                            il.and_expr(2,
+                                il.reg(2, LLIL_TEMP(0)),
+                                il.const(2, 0x0F00)
+                            ),
+                            il.const(1, 4)
+                        )
+                    )
+                )
+            )
         elif instr == 'unpk':
-            # TODO
-            il.append(il.unimplemented())
+            il.append(
+                il.set_reg(1,
+                    LLIL_TEMP(0),
+                    source.get_source_il(il)
+                )
+            )
+            il.append(
+                dest.get_dest_il(il,
+                    il.add(2,
+                        il.or_expr(2,
+                            il.and_expr(2,
+                                il.reg(1, LLIL_TEMP(0)),
+                                il.const(1, 0x0F)
+                            ),
+                            il.shift_left(2,
+                                il.and_expr(2,
+                                    il.reg(1, LLIL_TEMP(0)),
+                                    il.const(1, 0xF0)
+                                ),
+                                il.const(1, 4)
+                            )
+                        ),
+                        third.get_source_il(il)
+                    )
+                )
+            )
         elif instr in ('muls', 'mulu'):
             if isinstance(dest, OpRegisterDirectPair):
                 il.append(
