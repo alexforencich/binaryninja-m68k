@@ -1516,8 +1516,13 @@ class M68000(Architecture):
                     instr = 'pack'
                 else:
                     instr = 'unpk'
-                # TODO
-                instr = None
+                length = 4
+                dest = OpRegisterDirect(SIZE_BYTE, Registers[(instruction >> 9) & 7])
+                source = OpRegisterDirect(SIZE_BYTE, Registers[instruction & 7])
+                if instruction & 8:
+                    dest = OpRegisterIndirectPredecrement(SIZE_BYTE, Registers[((instruction >> 9) & 7) + 8])
+                    source = OpRegisterIndirectPredecrement(SIZE_BYTE, Registers[(instruction & 7) + 8])
+                third = OpImmediate(SIZE_WORD, struct.unpack_from(">H", data, 2)[0])
             else:
                 instr = 'or'
                 opmode = (instruction >> 6) & 0x7
