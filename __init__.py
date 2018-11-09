@@ -54,6 +54,27 @@ ShiftStyle = [
     'ro'   # SHIFT_SYLE_ROTATE
 ]
 
+BITFIELD_STYLE_TST = 0,
+BITFIELD_STYLE_EXTU = 1,
+BITFIELD_STYLE_CHG = 2,
+BITFIELD_STYLE_EXTS = 3,
+BITFIELD_STYLE_CLR = 4,
+BITFIELD_STYLE_FFO = 5,
+BITFIELD_STYLE_SET = 6,
+BITFIELD_STYLE_INS = 7,
+
+BitfieldStyle = [
+    "tst", # BITFIELD_STYLE_TST
+    "extu", # BITFIELD_STYLE_EXTU
+    "chg", # BITFIELD_STYLE_CHG
+    "exts", # BITFIELD_STYLE_EXTS
+    "clr", # BITFIELD_STYLE_CLR
+    "ffo", # BITFIELD_STYLE_FFO
+    "set", # BITFIELD_STYLE_SET
+    "ins", # BITFIELD_STYLE_INS
+]
+
+
 # Condition codes
 CONDITION_TRUE = 0
 CONDITION_FALSE = 1
@@ -1671,7 +1692,9 @@ class M68000(Architecture):
             elif instruction & 0xF8C0 == 0xE8C0:
                 # bit field instructions
                 # TODO
-                pass
+                style = (instruction >> 8) & 0x7
+                instr = 'bf'+BitfieldStyle[style]
+                length = 4
             else:
                 # shift/rotate
                 size = (instruction >> 6) & 3
@@ -1692,10 +1715,14 @@ class M68000(Architecture):
                     instr += 'r'
                 length = 2
         elif operation_code == 0xf:
+            if instruction & 0xff20 == 0xf420:
+                instr = 'cpush'
+                length = 2
+            elif instruction & 0xff80 == 0xff80:
+                instruction = 'illFF'
+                length = 2
             # coprocessor instructions
             # TODO
-            pass
-
         if instr is None:
             log_error('Bad opcode 0x{:x} at 0x{:x}'.format(instruction, addr))
             return error_value
@@ -2794,6 +2821,9 @@ class M68000(Architecture):
         elif instr == 'callm':
             # TODO
             il.append(il.unimplemented())
+        elif instr == 'cpush':
+            # TODO
+            il.append(il.unimplemented())
         elif instr in ('bhi', 'bls', 'bcc', 'bcs', 'bne', 'beq', 'bvc', 'bvs',
                     'bpl', 'bmi', 'bge', 'blt', 'bgt', 'ble'):
             flag_cond = ConditionMapping.get(instr[1:], None)
@@ -2806,7 +2836,9 @@ class M68000(Architecture):
             if cond_il is None:
                 il.append(il.unimplemented())
             else:
-                t = il.get_label_for_address(Architecture['M68000'], il[dest_il].value)
+                #t = il.get_label_for_address(Architecture['M68000'], il[dest_il].value)
+                if il[dest_il].operation == LowLevelILOperation.LLIL_CONST:
+                    t = il.get_label_for_address(Architecture['M68000'], dest.offset + 2 + il.current_address)
 
                 indirect = False
 
@@ -2849,7 +2881,8 @@ class M68000(Architecture):
             if cond_il is None:
                 il.append(il.unimplemented())
             else:
-                branch = il.get_label_for_address(Architecture['M68000'], il[dest_il].value)
+                if il[dest_il].operation == LowLevelILOperation.LLIL_CONST:
+                    branch = il.get_label_for_address(Architecture['M68000'], dest.offset+2+il.current_address)
 
                 indirect = False
 
@@ -2963,6 +2996,7 @@ class M68000(Architecture):
                     il.pop(4)
                 )
             )
+            '''
             il.append(
                 il.set_reg(4,
                     "sp",
@@ -2972,6 +3006,7 @@ class M68000(Architecture):
                     )
                 )
             )
+            '''
             il.append(
                 il.ret(
                     il.reg(4, LLIL_TEMP(0))
