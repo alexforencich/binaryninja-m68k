@@ -2806,7 +2806,7 @@ class M68000(Architecture):
             if cond_il is None:
                 il.append(il.unimplemented())
             else:
-                t = il.get_label_for_address(Architecture['M68000'], il[dest_il].value)
+                t = il.get_label_for_address(Architecture['M68000'], il[dest_il].constant)
 
                 indirect = False
 
@@ -2849,7 +2849,7 @@ class M68000(Architecture):
             if cond_il is None:
                 il.append(il.unimplemented())
             else:
-                branch = il.get_label_for_address(Architecture['M68000'], il[dest_il].value)
+                branch = il.get_label_for_address(Architecture['M68000'], il[dest_il].constant)
 
                 indirect = False
 
