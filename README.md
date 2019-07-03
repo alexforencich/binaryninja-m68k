@@ -1,5 +1,5 @@
 # Motorola 68k Architecture Plugin (v0.1)
-Author: **Alex Forencich**
+Original Author: [**Alex Forencich**](/alexforencich)
 
 _A disassembler and lifter for the Motorola 68k architecture._
 
@@ -9,14 +9,20 @@ This plugin disassembles Motorola 68k machine code and generates LLIL.
 
 To install this plugin, navigate to your Binary Ninja plugins directory, and run
 
-```git clone https://github.com/alexforencich/binaryninja-m68k.git m68k```
+```git clone https://github.com/wrigjl/binaryninja-m68k.git m68k```
 
 ## Minimum Version
 
 This plugin requires the following minimum version of Binary Ninja:
 
- * release (Personal) - 1.0.13
+ * release (Personal) - 1.1
 
 ## License
 
 This plugin is released under a [MIT](LICENSE) license.
+
+## Modifications by [Jason Wright](/wrigjl)
+
+ * register with ELF loader
+ * fixups for binja il changes
+ * fixed 'rtd' instruction to parse correctly
