@@ -2782,12 +2782,21 @@ class M68000(Architecture):
                 source.get_dest_il(il, il.pop(4))
             )
         elif instr in ('jmp', 'bra'):
-            # TODO labels
-            il.append(
-                il.jump(dest.get_address_il(il))
-            )
+            dstil = dest.get_address_il(il)
+
+            dstlabel = None
+            if il[dstil].operation == LowLevelILOperation.LLIL_CONST:
+                dstlabel = il.get_label_for_address(il.arch, il[dstil].constant)
+
+            if dstlabel is not None:
+                il.append(
+                    il.goto(dstlabel)
+                )
+            else:
+                il.append(
+                    il.jump(dstil)
+                )
         elif instr in ('jsr', 'bsr'):
-            # TODO labels
             il.append(
                 il.call(dest.get_address_il(il))
             )
@@ -2806,7 +2815,7 @@ class M68000(Architecture):
             if cond_il is None:
                 il.append(il.unimplemented())
             else:
-                t = il.get_label_for_address(Architecture['M68000'], il[dest_il].constant)
+                t = il.get_label_for_address(il.arch, il[dest_il].constant)
 
                 indirect = False
 
@@ -2816,7 +2825,7 @@ class M68000(Architecture):
 
                 f_label_found = True
 
-                f = il.get_label_for_address(Architecture['M68000'], il.current_address+length)
+                f = il.get_label_for_address(il.arch, il.current_address+length)
 
                 if f is None:
                     f = LowLevelILLabel()

@@ -26,3 +26,4 @@ This plugin is released under a [MIT](LICENSE) license.
  * register with ELF loader
  * fixups for binja il changes
  * fixed 'rtd' instruction to parse correctly
+ * labels for 'jmp' and 'bra'
