@@ -2964,11 +2964,13 @@ class M68000(Architecture):
                 )
             )
             il.append(
-                il.set_reg(4,
-                    "sp",
+                il.set_reg(4, 'sp',
                     il.add(4,
-                        il.reg(4, "sp"),
-                        source.get_source_il(il)
+                        il.reg(4, 'sp'),
+                        il.sign_extend(4, il.const(2,
+                            dest.value),
+                            0
+                        )
                     )
                 )
             )
