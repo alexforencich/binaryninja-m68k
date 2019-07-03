@@ -27,3 +27,4 @@ This plugin is released under a [MIT](LICENSE) license.
  * fixups for binja il changes
  * fixed 'rtd' instruction to parse correctly
  * labels for 'jmp' and 'bra'
+ * fixed 'roxr'/'roxl' instructions to add correct flag

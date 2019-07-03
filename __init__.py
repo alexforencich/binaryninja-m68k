@@ -2448,6 +2448,7 @@ class M68000(Architecture):
                     il.rotate_left_carry(size_bytes,
                         dest.get_source_il(il),
                         source_il,
+                        il.flag('x'),
                         flags='*'
                     )
                 )
@@ -2461,6 +2462,7 @@ class M68000(Architecture):
                     il.rotate_right_carry(size_bytes,
                         dest.get_source_il(il),
                         source_il,
+                        il.flag('x'),
                         flags='*'
                     )
                 )

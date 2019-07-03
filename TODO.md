@@ -14,3 +14,6 @@ okay, I see a couple of problems that are easy to fix. indirect branches should 
 
 and for `get_instruction_info`:
 [clipper.py:1176](https://github.com/pmackinlay/binaryninja-clipper/blob/master/clipper.py#L1176)
+
+NOTE: the il.goto/il.jump using labels is done, but the UnresolvedBranch
+comment has not been dealt with.
