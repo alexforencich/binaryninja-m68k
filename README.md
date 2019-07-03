@@ -1,5 +1,5 @@
 # Motorola 68k Architecture Plugin (v0.1)
-Original Author: [**Alex Forencich**](/alexforencich)
+Original Author: [**Alex Forencich**](http://www.github.com/alexforencich)
 
 _A disassembler and lifter for the Motorola 68k architecture._
 
@@ -21,7 +21,7 @@ This plugin requires the following minimum version of Binary Ninja:
 
 This plugin is released under a [MIT](LICENSE) license.
 
-## Modifications by [Jason Wright](/wrigjl)
+## Modifications by [Jason Wright](http://www.github.com/wrigjl)
 
  * register with ELF loader
  * fixups for binja il changes
