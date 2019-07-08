@@ -829,22 +829,21 @@ class OpImmediate:
 
 # condition mapping to LLIL flag conditions
 ConditionMapping = {
-    # 'hi': LowLevelILFlagCondition.
-    # 'ls': LowLevelILFlagCondition.
-    # 'cc': LowLevelILFlagCondition.
-    # 'cs': LowLevelILFlagCondition.
+    'hi': LowLevelILFlagCondition.LLFC_UGT,
+    'ls': LowLevelILFlagCondition.LLFC_ULE,
+    'cc': LowLevelILFlagCondition.LLFC_UGE,
+    'cs': LowLevelILFlagCondition.LLFC_ULT,
     'ne': LowLevelILFlagCondition.LLFC_NE,
     'eq': LowLevelILFlagCondition.LLFC_E,
     'vc': LowLevelILFlagCondition.LLFC_NO,
     'vs': LowLevelILFlagCondition.LLFC_O,
     'pl': LowLevelILFlagCondition.LLFC_POS,
     'mi': LowLevelILFlagCondition.LLFC_NEG,
-    'ge': LowLevelILFlagCondition.LLFC_UGE,
-    'lt': LowLevelILFlagCondition.LLFC_ULT,
-    'gt': LowLevelILFlagCondition.LLFC_UGT,
-    'le': LowLevelILFlagCondition.LLFC_ULE,
+    'ge': LowLevelILFlagCondition.LLFC_SGE,
+    'lt': LowLevelILFlagCondition.LLFC_SLT,
+    'gt': LowLevelILFlagCondition.LLFC_SGT,
+    'le': LowLevelILFlagCondition.LLFC_SLE,
 }
-
 
 class M68000(Architecture):
     name = "M68000"
@@ -914,20 +913,20 @@ class M68000(Architecture):
         'c': FlagRole.CarryFlagRole,
     }
     flags_required_for_flag_condition = {
-        # LowLevelILFlagCondition. ['c', 'z'], # hi
-        # LowLevelILFlagCondition. ['c', 'z'], # ls
-        # LowLevelILFlagCondition. ['c'], # cc
-        # LowLevelILFlagCondition. ['c'], # cs
+        LowLevelILFlagCondition.LLFC_UGT: ['c', 'z'], # hi
+        LowLevelILFlagCondition.LLFC_ULE: ['c', 'z'], # ls
+        LowLevelILFlagCondition.LLFC_UGE: ['c'], # cs
+        LowLevelILFlagCondition.LLFC_ULE: ['c'], # cs
         LowLevelILFlagCondition.LLFC_NE:  ['z'], # ne
         LowLevelILFlagCondition.LLFC_E:   ['z'], # eq
         LowLevelILFlagCondition.LLFC_NO:  ['v'], # vc
         LowLevelILFlagCondition.LLFC_O:   ['v'], # vs
         LowLevelILFlagCondition.LLFC_POS: ['n'], # pl
         LowLevelILFlagCondition.LLFC_NEG: ['n'], # mi
-        LowLevelILFlagCondition.LLFC_UGE: ['n', 'v'], # ge
-        LowLevelILFlagCondition.LLFC_ULT: ['n', 'v'], # lt
-        LowLevelILFlagCondition.LLFC_UGT: ['n', 'v', 'z'], # gt
-        LowLevelILFlagCondition.LLFC_ULE: ['n', 'v', 'z'], # le
+        LowLevelILFlagCondition.LLFC_SGE: ['n', 'v'], # ge
+        LowLevelILFlagCondition.LLFC_SLT: ['n', 'v'], # lt
+        LowLevelILFlagCondition.LLFC_SGT: ['n', 'v', 'z'], # gt
+        LowLevelILFlagCondition.LLFC_SLE: ['n', 'v', 'z'], # le
     }
     control_registers = {
     }
@@ -3126,14 +3125,12 @@ class M68000(Architecture):
                     'dbeq', 'dbvc', 'dbvs', 'dbpl', 'dbmi', 'dbge', 'dblt',
                     'dbgt', 'dble'):
             conditional = False
-            call = False
             branch_dest = None
 
             bt = BranchType.UnresolvedBranch
             if instr in ('jmp', 'bra'):
                 bt = BranchType.UnconditionalBranch
             elif instr in ('jsr', 'bsr'):
-                call = True
                 bt = BranchType.CallDestination
             else:
                 conditional = True
@@ -3144,12 +3141,12 @@ class M68000(Architecture):
                 if dest.reg == 'pc':
                     branch_dest = addr+2
                 else:
-                    bt = BranchType.IndirectBranch
+                    bt = BranchType.UnresolvedBranch
             elif isinstance(dest, OpRegisterIndirectDisplacement):
                 if dest.reg == 'pc':
                     branch_dest = addr+2+dest.offset
                 else:
-                    bt = BranchType.IndirectBranch
+                    bt = BranchType.UnresolvedBranch
 
             if conditional:
                 if instr[0:2] == 'db':
@@ -3159,10 +3156,7 @@ class M68000(Architecture):
                     result.add_branch(BranchType.TrueBranch, branch_dest)
                     result.add_branch(BranchType.FalseBranch, addr+length)
             else:
-                if call and bt == BranchType.IndirectBranch:
-                    # don't branch at all for indirect calls
-                    pass
-                elif bt == BranchType.IndirectBranch or bt == BranchType.UnresolvedBranch or branch_dest is None:
+                if bt == BranchType.IndirectBranch or bt == BranchType.UnresolvedBranch or branch_dest is None:
                     result.add_branch(bt)
                 else:
                     result.add_branch(bt, branch_dest)
