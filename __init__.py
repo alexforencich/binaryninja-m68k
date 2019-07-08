@@ -3147,6 +3147,8 @@ class M68000(Architecture):
                     branch_dest = addr+2+dest.offset
                 else:
                     bt = BranchType.UnresolvedBranch
+            elif isinstance(dest, OpRegisterIndirectIndex):
+                bt = BranchType.UnresolvedBranch
 
             if conditional:
                 if instr[0:2] == 'db':
