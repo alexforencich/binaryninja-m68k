@@ -760,13 +760,14 @@ class OpMemoryIndirectPreindex:
 
 
 class OpAbsolute:
-    def __init__(self, size, address, address_size):
+    def __init__(self, size, address, address_size, address_width):
         self.size = size
         self.address = address
         self.address_size = address_size
+        self.address_width = address_width
 
     def __repr__(self):
-        return "OpAbsolute(%d, 0x%x, %d)" % (self.size, self.address, self.address_size)
+        return "OpAbsolute(%d, 0x%x, %d, %d)" % (self.size, self.address, self.address_size, self.address_width)
 
     def format(self, addr):
         # ($1234).w
@@ -783,7 +784,7 @@ class OpAbsolute:
         return None
 
     def get_address_il(self, il):
-        return il.sign_extend(4,
+        return il.sign_extend(self.address_width,
             il.const(1 << self.address_size, self.address)
         )
 
@@ -847,7 +848,7 @@ ConditionMapping = {
 
 class M68000(Architecture):
     name = "M68000"
-    address_size = 4
+    address_size = 3
     default_int_size = 4
     max_instr_length = 22
     endianness = Endianness.BigEndian
@@ -966,10 +967,10 @@ class M68000(Architecture):
                 val = struct.unpack_from('>H', data, 0)[0]
                 if val & 0x8000:
                     val |= 0xffff0000
-                return (OpAbsolute(size, val, 1), 2)
+                return (OpAbsolute(size, val, 1, self.address_size), 2)
             if register == 1:
                 # absolute long
-                return (OpAbsolute(size, struct.unpack_from('>L', data, 0)[0], 2), 4)
+                return (OpAbsolute(size, struct.unpack_from('>L', data, 0)[0], 2, self.address_size), 4)
             elif register == 2:
                 # program counter indirect with displacement
                 return (OpRegisterIndirectDisplacement(size, 'pc', struct.unpack_from('>h', data, 0)[0]), 2)
@@ -3363,6 +3364,7 @@ class M68020(M68010):
         0x803: 'msp',
         0x804: 'isp',
     }
+    address_size = 4
     memory_indirect = True
     movem_store_decremented = True
 
