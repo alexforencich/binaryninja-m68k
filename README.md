@@ -28,3 +28,6 @@ This plugin is released under a [MIT](LICENSE) license.
  * fixed 'rtd' instruction to parse correctly
  * labels for 'jmp' and 'bra'
  * fixed 'roxr'/'roxl' instructions to add correct flag
+ * fixed signedness of branches
+ * added bhi, bls, bcc, bcs support
+ * mark indirect jump/call as unresolved so il can figure it out
