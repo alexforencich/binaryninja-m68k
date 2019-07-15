@@ -489,7 +489,7 @@ class OpRegisterIndirectDisplacement:
 
     def get_address_il(self, il):
         if self.reg == 'pc':
-            return il.const(4, il.current_address+2+self.offset)
+            return il.const_pointer(4, il.current_address+2+self.offset)
         else:
             return il.add(4,
                 il.reg(4, self.reg),
@@ -545,7 +545,7 @@ class OpRegisterIndirectIndex:
     def get_address_il(self, il):
         return il.add(4,
             il.add(4,
-                il.const(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
+                il.const_pointer(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
                 il.const(4, self.offset)
             ),
             il.mult(4,
@@ -601,7 +601,7 @@ class OpMemoryIndirect:
         return il.add(4,
             il.load(4,
                 il.add(4,
-                    il.const(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
+                    il.const_pointer(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
                     il.const(4, self.offset)
                 ),
             ),
@@ -665,7 +665,7 @@ class OpMemoryIndirectPostindex:
         return il.add(4,
             il.load(4,
                 il.add(4,
-                    il.const(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
+                    il.const_pointer(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
                     il.const(4, self.offset)
                 )
             ),
@@ -736,7 +736,7 @@ class OpMemoryIndirectPreindex:
             il.load(4,
                 il.add(4,
                     il.add(4,
-                        il.const(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
+                        il.const_pointer(4, il.current_address+2) if self.reg == 'pc' else il.reg(4, self.reg),
                         il.const(4, self.offset)
                     ),
                     il.mult(4,
@@ -1081,6 +1081,8 @@ class M68000(Architecture):
                     instr = 'callm'
                     source = OpImmediate(SIZE_BYTE, struct.unpack_from('>B', data, 3)[0])
                     dest, extra_dest = self.decode_effective_address(instruction >> 3, instruction, data[4:], SIZE_BYTE) # check
+                    if extra_dest is None:
+                        return error_value
                     length = 4+extra_dest
                 else:
                     size = (instruction >> 9) & 3
@@ -1091,6 +1093,8 @@ class M68000(Architecture):
                         instr = 'cmp2'
                     source, extra_source = self.decode_effective_address(instruction >> 3, instruction, data[4:], SIZE_BYTE) # check
                     dest = OpRegisterDirect(size, Registers[(instruction >> 12) & 15])
+                    if extra_source is None:
+                        return error_value
                     length = 4+extra_source
             elif instruction & 0xffc0 in (0x0ac0, 0x0cc0, 0x0ec0):
                 if instruction & 0xf9ff == 0x08fc:
@@ -1109,6 +1113,8 @@ class M68000(Architecture):
                     source = OpRegisterDirect(size, Registers[extra & 7])
                     dest = OpRegisterDirect(size, Registers[(extra >> 6) & 7])
                     third, extra_third = self.decode_effective_address(instruction >> 3, instruction, data[4:], size)
+                    if extra_third is None:
+                        return error_value
                     length = 4+extra_third
             elif msb in (0x00, 0x02, 0x04, 0x06, 0x0a, 0x0c):
                 # ORI, ANDI, SUBI, ADDI, EORI, CMPI
@@ -1192,6 +1198,8 @@ class M68000(Architecture):
                 source, extra_source = self.decode_effective_address(instruction >> 3, instruction, data[4:], size)
                 if extra & 0x0800:
                     source, dest = dest, source
+                if extra_source is None:
+                    return error_value
                 length = 4+extra_source
         elif operation_code in (0x1, 0x2, 0x3):
             # move
@@ -1473,6 +1481,8 @@ class M68000(Architecture):
                     instr = 's'+Condition[(instruction >> 8) & 0xf]
                     size = SIZE_BYTE
                     dest, extra_dest = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
+                    if extra_dest is None:
+                        return error_value
                     length = 2+extra_dest
             else:
                 if instruction & 0x0100:
@@ -1485,6 +1495,8 @@ class M68000(Architecture):
                 size = (instruction >> 6) & 3
                 source = OpImmediate(SIZE_BYTE, val)
                 dest, extra_dest = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
+                if extra_dest is None:
+                    return error_value
                 length = 2+extra_dest
         elif operation_code == 0x6:
             # Bcc/BSR/BRA
@@ -1526,6 +1538,8 @@ class M68000(Architecture):
                 size = SIZE_WORD
                 dest = OpRegisterDirect(size, Registers[(instruction >> 9) & 7])
                 source, extra_source = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
+                if extra_source is None:
+                    return error_value
                 length = 2+extra_source
             elif instruction & 0xf1f0 == 0x8100:
                 instr = 'sbcd'
@@ -1562,6 +1576,8 @@ class M68000(Architecture):
                 source, extra_source = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
                 if opmode & 4:
                     source, dest = dest, source
+                if extra_source is None:
+                    return error_value
                 length = 2+extra_source
         elif operation_code == 0x9:
             # SUB/SUBA/SUBX
@@ -1586,6 +1602,8 @@ class M68000(Architecture):
                         dest = OpRegisterIndirectPredecrement(size, dest.reg)
                 else:
                     source, dest = dest, source
+            if extra_source is None:
+                return error_value
             length = 2+extra_source
         elif operation_code == 0xa:
             # (unassigned, reserved)
@@ -1613,6 +1631,8 @@ class M68000(Architecture):
                 else:
                     source, dest = dest, source
                     instr = 'eor'
+            if extra_source is None:
+                return error_value
             length = 2+extra_source
         elif operation_code == 0xc:
             # AND/MUL/ABCD/EXG
@@ -1624,6 +1644,8 @@ class M68000(Architecture):
                 size = SIZE_WORD
                 source, extra_source = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
                 dest = OpRegisterDirect(size, Registers[(instruction >> 9) & 7])
+                if extra_source is None:
+                    return error_value
                 length = 2+extra_source
             elif instruction & 0xf130 == 0xc100:
                 if instruction & 0xf1f0 == 0xc100:
@@ -1653,6 +1675,8 @@ class M68000(Architecture):
                 source, extra_source = self.decode_effective_address(instruction >> 3, instruction, data[2:], size)
                 if opmode & 4:
                     source, dest = dest, source
+                if extra_source is None:
+                    return error_value
                 length = 2+extra_source
         elif operation_code == 0xd:
             # ADD/ADDA/ADDX
@@ -1677,6 +1701,8 @@ class M68000(Architecture):
                         dest = OpRegisterIndirectPredecrement(size, dest.reg)
                 else:
                     source, dest = dest, source
+            if extra_source is None:
+                return error_value
             length = 2+extra_source
         elif operation_code == 0xe:
             # shift/rotate/bit field
@@ -1691,6 +1717,8 @@ class M68000(Architecture):
                     instr += 'l'
                 else:
                     instr += 'r'
+                if extra_dest is None:
+                    return error_value
                 length = 2+extra_dest
             elif instruction & 0xF8C0 == 0xE8C0:
                 # bit field instructions
@@ -1727,7 +1755,8 @@ class M68000(Architecture):
             # coprocessor instructions
             # TODO
         if instr is None:
-            log_error('Bad opcode 0x{:x} at 0x{:x}'.format(instruction, addr))
+            # FIXME uncomment to debug
+            #log_error('Bad opcode at 0x{:x}'.format(addr))
             return error_value
 
         #print((instr, length, size, source, dest, third))
