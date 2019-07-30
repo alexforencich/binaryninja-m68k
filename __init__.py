@@ -3360,7 +3360,7 @@ class M68000(Architecture):
 
         if value >= -128 and value <= 127 and len(data) >= 2:
             value = value & 0xff
-            return b'\x70'+chr(value)+b'\x4e\x71'*(count-1)
+            return b'\x70'+struct.pack('>b',value)+b'\x4e\x71'*(count-1)
 
         if len(data) >= 6:
             return b'\x20\x3C'+struct.pack('>l', value)+b'\x4e\x71'*(count-3)
