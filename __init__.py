@@ -3141,7 +3141,7 @@ class M68000(Architecture):
             il.append(il.unimplemented())
 
     def perform_get_instruction_info(self, data, addr):
-        instr, length, size, source, dest, third = self.decode_instruction(data, addr)
+        instr, length, _size, _source, dest, _third = self.decode_instruction(data, addr)
 
         if instr is None:
             return None
