@@ -917,7 +917,7 @@ class M68000(Architecture):
         LowLevelILFlagCondition.LLFC_UGT: ['c', 'z'], # hi
         LowLevelILFlagCondition.LLFC_ULE: ['c', 'z'], # ls
         LowLevelILFlagCondition.LLFC_UGE: ['c'], # cs
-        LowLevelILFlagCondition.LLFC_ULE: ['c'], # cs
+        LowLevelILFlagCondition.LLFC_ULT: ['c'], # cs
         LowLevelILFlagCondition.LLFC_NE:  ['z'], # ne
         LowLevelILFlagCondition.LLFC_E:   ['z'], # eq
         LowLevelILFlagCondition.LLFC_NO:  ['v'], # vc
