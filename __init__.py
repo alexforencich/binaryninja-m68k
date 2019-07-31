@@ -3184,6 +3184,7 @@ class M68000(Architecture):
                 bt = BranchType.UnresolvedBranch
 
             if conditional:
+                # pylint: disable=unsubscriptable-object
                 if instr[0:2] == 'db':
                     result.add_branch(BranchType.TrueBranch, addr+length)
                     result.add_branch(BranchType.FalseBranch, branch_dest)
@@ -3205,6 +3206,7 @@ class M68000(Architecture):
             return None
 
         if size is not None:
+            # pylint: disable=invalid-sequence-index
             instr += SizeSuffix[size]
 
         tokens = [InstructionTextToken(InstructionTextTokenType.InstructionToken, "%-10s" % instr)]
